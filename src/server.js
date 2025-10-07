@@ -8,50 +8,48 @@ const clientRoutes = require('./routes/clients');
 const rentalRoutes = require('./routes/rentals');
 
 const app = express();
-const PORT = process.env.PORT || 10000; // Render usa porta 10000
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const PORT = process.env.PORT || 10000;
 
-// CORS para produção - permitir seu domínio do frontend
-const allowedOrigins = [
-  'http://localhost:3001',
-  'http://localhost:3000',
-  'https://seu-frontend.vercel.app', // Substitua pelo seu domínio do Vercel
-];
-
+// ✅ CORS CONFIGURADO CORRETAMENTE
 app.use(cors({
-  origin: function (origin, callback) {
-    // Permitir requests sem origin (como mobile apps ou curl)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
+  origin: [
+    'http://localhost:3001',
+    'http://localhost:3000', 
+    'https://car-rental-frontend.vercel.app',
+    'https://car-rental-frontend-git-main-gabrielbismarks-projects.vercel.app',
+    'https://car-rental-frontend-*.vercel.app'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+}));
+
+// Ou use CORS liberado para todos (mais fácil para teste):
+app.use(cors({
+  origin: "*", // ⚠️ Permite TODOS os domínios (apenas para teste)
   credentials: true
 }));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Logging middleware
+// Logging
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - ${req.ip}`);
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
   next();
 });
 
-// Rotas
+// Suas rotas
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/rentals', rentalRoutes);
 
-// Health check (importante para Render)
+// Health check
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     message: 'Backend funcionando',
-    environment: NODE_ENV,
+    environment: process.env.NODE_ENV,
     timestamp: new Date().toISOString()
   });
 });
